@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ profil.nama }} - Portofolio</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Animate.css -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='chatbot.css') }}">
+</head>
+<body class="bg-light">
+
+    <div class="container py-5">
+        <div class="text-center mb-5">
+            <img src="{{ url_for('static', filename='profile.jpg') }}" alt="Foto Profil" class="rounded-circle shadow animate__animated animate__fadeInDown" width="150">
+            <h1 class="display-4 mt-3">{{ profil.nama }}</h1>
+            <p class="lead">{{ profil.deskripsi }}</p>
+            <a href="#projects" class="btn btn-primary btn-lg animate__animated animate__pulse animate__infinite">Lihat Project</a>
+        </div>
+
+        <h2 id="projects" class="mb-3 animate__animated animate__fadeInLeft">Project Saya</h2>
+        <div class="row">
+            {% for p in profil.project %}
+            <div class="col-md-6 mb-3">
+                <div class="card h-100 shadow-sm animate-on-scroll">
+                    <img src="{{ url_for('static', filename=p.gambar) }}" class="card-img-top" alt="{{ p.nama }}">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ p.nama }}</h5>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal{{ loop.index }}">
+                            Detail
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal -->
+            <div class="modal fade" id="modal{{ loop.index }}" tabindex="-1" aria-labelledby="modalLabel{{ loop.index }}" aria-hidden="true">
+              <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="modalLabel{{ loop.index }}">{{ p.nama }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <div class="modal-body">
+                    <img src="{{ url_for('static', filename=p.gambar) }}" class="img-fluid mb-3" alt="{{ p.nama }}">
+                    <p>{{ p.deskripsi }}</p>
+                    <a href="{{ p.link }}" target="_blank" class="btn btn-success">Lihat Demo</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <h2 class="animate__animated animate__fadeInLeft mt-5">Kontak</h2>
+        <p>Email: <strong>{{ profil.kontak.email }}</strong></p>
+        <p>LinkedIn: <a href="{{ profil.kontak.linkedin }}" target="_blank">Profil LinkedIn</a></p>
+    </div>
+
+    <!-- Chatbot Button -->
+    <div id="chatbot" onclick="toggleChatbox()">
+        💬
+    </div>
+
+    <!-- Chatbox -->
+    <div id="chatbox">
+        <div class="header">
+            Chatbot
+            <span class="close-btn" onclick="toggleChatbox()">&#10005;</span>
+        </div>
+        <div class="messages" id="messages"></div>
+        <div class="input">
+            <input type="text" id="userMessage" placeholder="Ketik pesan..." onkeypress="checkEnter(event)" />
+            <button onclick="sendMessage()">Kirim</button>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Toggle chatbox visibility
+        function toggleChatbox() {
+            const chatbox = document.getElementById('chatbox');
+            chatbox.classList.toggle('open');
+        }
+
+        // Send message to the chatbot
+        function sendMessage() {
+            const userMessage = document.getElementById('userMessage').value;
+            if (!userMessage.trim()) return;
+
+            const messages = document.getElementById('messages');
+            const userMessageDiv = document.createElement('div');
+            userMessageDiv.classList.add('bubble', 'user');
+            userMessageDiv.textContent = userMessage;
+            messages.appendChild(userMessageDiv);
+
+            fetch(`/chatbot?message=${userMessage}`)
+                .then(response => response.json())
+                .then(data => {
+                    const botMessageDiv = document.createElement('div');
+                    botMessageDiv.classList.add('bubble', 'bot');
+                    botMessageDiv.innerHTML = data.response;  // Gunakan innerHTML untuk menampilkan HTML
+                    messages.appendChild(botMessageDiv);
+
+                    // Scroll to the latest message
+                    messages.scrollTop = messages.scrollHeight;
+                });
+
+            // Clear the input field
+            document.getElementById('userMessage').value = '';
+        }
+
+        // Detect Enter key press to send message
+        function checkEnter(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+    </script>
+
+</body>
+</html>
